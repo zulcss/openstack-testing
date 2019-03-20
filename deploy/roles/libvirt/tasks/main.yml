@@ -1,0 +1,64 @@
+---
+- name: install libvirt
+  yum:
+      name: "{{ item }}"
+      state: present
+  loop:
+      - libvirt
+      - libvirt-devel
+      - libguestfs-tools
+      - libvirt-python
+      - qemu-kvm
+      - virt-install
+
+- name: increase the semaphone count
+  sysctl:
+      name: kernel.sem
+      value: 1024 12800 32 8192
+      state: present
+      sysctl_set: yes
+      reload: yes
+
+- name: restart libvirt
+  service:
+      name: libvirtd
+      state: restarted
+
+- name: add stack user to libvirt group
+  user:
+      name: stack
+      group: libvirt
+
+- name: list running domains
+  command: virsh list --all --name
+  register: libvirt_domains
+
+- name: list running networks
+  command: virsh net-list --all --name
+  register: libvirt_networks
+
+- name: extract running domains
+  set_fact:
+      libvirt_running_domains: "{{ libvirt_domains.stdout }}"
+
+- name: extract running networks
+  set_fact:
+      libvirt_running_networks: "{{ libvirt_networks.stdout }}"
+
+- name: shutdown domains
+  shell: |
+    virsh destroy {{ item }}
+    virsh undefine {{ item }}
+  register: libvirt_machine_shutdown_result
+  until: libvirt_machine_shutdown_result.rc == 0
+  when: item in libvirt_running_domains
+  with_items: "{{ libvirt_domain_names }}"
+
+- name: destory networks
+  shell: |
+      virsh net-destroy {{ item }}
+      virsh net-undefine {{ item }}
+  register: libvirt_network_shudown_result
+  until: libvirt_network_shudown_result.rc == 0
+  when: item in libvirt_running_networks
+  with_items: "{{ libvirt_network_names }}"

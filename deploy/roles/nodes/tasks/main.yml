@@ -1,0 +1,37 @@
+---
+- name: create the stack user
+  block:
+      - name: Create the devuser
+        user:
+            name: stack
+            state: present
+      - name: sudoers no tty
+        lineinfile:
+            dest: /etc/sudoers
+            state: absent
+            regexp: 'Defaults\s+requiretty'
+      - name: add user to sudoers
+        lineinfile:
+            dest: "/etc/sudoers"
+            line: "stack ALL=(root) NOPASSWD:ALL"
+      - name: setup ssh key
+        authorized_key:
+            user: stack
+            state: present
+            key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+- name: prep the dev environment
+  block:
+      - name: Install the software
+        yum:
+            name: "{{ item }}"
+            state: present
+        loop:
+            - git
+            - vim 
+            - python-virtualenv
+            - python-pip
+            - gcc
+            - libffi-devel
+            - openssl-devel
+            - libselinux-python

@@ -1,0 +1,10 @@
+---
+- name: grabbing dotfiles
+  become: true
+  become_user: stack
+  git: repo=https://github.com/zulcss/dotfiles dest=~/dotfiles
+
+- name: installing dotfiles
+  become: true
+  become_user: stack
+  command: ~/dotfiles/bin/bootstrap

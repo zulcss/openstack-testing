@@ -1,0 +1,16 @@
+#!/bin/bash
+
+source {{ infrared_venv }}/bin/activate
+
+infrared virsh --cleanup yes --host-address {{ host }} --host-key {{ host_key }}
+
+{% if deploy_type == 'standalone' %}
+echo "Starting standalone version"
+
+infrared virsh --topology-nodes standalone:1 \
+    --topology-network 1_net \
+    --host-address {{ host }} \
+    --host-key {{ host_key }}
+
+infrared tripleo-standalone --version {{ version }}
+{% endif %}

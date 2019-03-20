@@ -1,0 +1,12 @@
+---
+- hosts: master
+  tags: setup-host
+  become: true
+  roles:
+    - nodes
+    - libvirt
+
+- hosts: localhost
+  tags: infrared
+  roles:
+      - infrared

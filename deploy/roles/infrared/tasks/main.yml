@@ -1,0 +1,37 @@
+---
+- name: Remove old infrared
+  command: rm -rf "{{ infrared_checkout }}"
+
+- name: Remove old workspaces
+  command: rm -rf "{{ infrared_env }}"
+
+- name: Remove old virtualenv
+  command: rm -rf "{{ infrared_venv }}"
+
+- name: Cloning infrared repository
+  git:
+    repo: https://github.com/redhat-openstack/infrared.git
+    dest: "{{ infrared_checkout }}"
+
+- name: Setup virtualenv for infrared
+  pip:
+      virtualenv: "{{ infrared_venv }}"
+      name: "{{ item }}"
+      state: latest
+      extra_args: '-e {{ infrared_checkout }}'
+  with_items:
+      - pip
+      - setuptools
+
+- name: Setup plugins
+  shell: |
+      source {{ infrared_venv}}/bin/activate
+      ir plugin add all
+  args:
+      chdir: "{{ infrared_checkout }}"
+
+- name: Add deploy script
+  template:
+      src: deploy.sh.j2
+      dest: "{{ infrared_checkout }}/deploy.sh"
+      mode: 0775
