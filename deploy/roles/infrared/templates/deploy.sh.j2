@@ -13,4 +13,5 @@ infrared virsh --topology-nodes standalone:1 \
     --host-key {{ host_key }}
 
 infrared tripleo-standalone --version {{ version }}
+ir ssh standalone-0 "sudo yum install -y git vim"
 {% endif %}
